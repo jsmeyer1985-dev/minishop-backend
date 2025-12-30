@@ -2,10 +2,10 @@ const axios = require('axios');
 
 exports.handler = async (event) => {
   const formData = new URLSearchParams(event.body);
-  const SHOP = 'your-store-name.myshopify.com'; // Replace with your actual store
+  const SHOP = process.env.SHOPIFY_STORE;
   const TOKEN = process.env.SHOPIFY_API_TOKEN;
 
-  const customer_id = formData.get('customer_id'); // Must be passed from form
+  const customer_id = formData.get('customer_id');
   const minishop_name = formData.get('minishop_name');
   const minishop_banner = formData.get('banner_subtext');
   const reseller_name = formData.get('reseller_name');
@@ -27,7 +27,7 @@ exports.handler = async (event) => {
     { key: 'minishop_whatsapp', value: whatsapp_number, type: 'single_line_text_field' },
     { key: 'minishop_group', value: whatsapp_group, type: 'url' },
     { key: 'minishop_about', value: about_us, type: 'multi_line_text_field' },
-    { key: 'minishop_buttoncolor', value: button_color, type: 'color' },
+    { key: 'minishop_buttoncolor', value: button_color, type: 'single_line_text_field' }, // hex stored as text
     { key: 'minishop_shippingfee', value: shipping_fee, type: 'number_integer' },
     { key: 'minishop_bankname', value: bank_name, type: 'single_line_text_field' },
     { key: 'minishop_accountholder', value: account_holder, type: 'single_line_text_field' },
@@ -39,26 +39,28 @@ exports.handler = async (event) => {
   try {
     // Save metafields
     for (const field of metafields) {
-      await axios.post(`https://${SHOP}/admin/api/2023-10/metafields.json`, {
-        metafield: {
-          namespace: 'minishop',
-          key: field.key,
-          value: field.value,
-          type: field.type,
-          owner_id: customer_id,
-          owner_resource: 'customer'
-        }
-      }, {
-        headers: {
-          'X-Shopify-Access-Token': TOKEN,
-          'Content-Type': 'application/json'
-        }
-      });
+      if (field.value) {
+        await axios.post(`https://${SHOP}/admin/api/2025-01/metafields.json`, {
+          metafield: {
+            namespace: 'minishop',
+            key: field.key,
+            value: field.value,
+            type: field.type,
+            owner_id: customer_id,
+            owner_resource: 'customer'
+          }
+        }, {
+          headers: {
+            'X-Shopify-Access-Token': TOKEN,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
     }
 
     // Create MiniShop page
-    const handle = `ms/${minishop_name.toLowerCase().replace(/\s+/g, '-')}/ms`;
-    await axios.post(`https://${SHOP}/admin/api/2023-10/pages.json`, {
+    const handle = `ms-${minishop_name.toLowerCase().replace(/\s+/g, '-')}`;
+    await axios.post(`https://${SHOP}/admin/api/2025-01/pages.json`, {
       page: {
         title: minishop_name,
         handle: handle,
@@ -87,4 +89,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
