@@ -22,7 +22,7 @@ exports.handler = async (event) => {
     const whatsapp_number = formData.get('whatsapp_number') || '';
     const whatsapp_group = formData.get('whatsapp_group') || '';
     const about_us = formData.get('about_us') || '';
-    const button_color = formData.get('button_color') || ''; // store hex as text
+    const button_color = formData.get('button_color') || '';
     const shipping_fee = formData.get('shipping_fee') || '';
     const bank_name = formData.get('bank_name') || '';
     const account_holder = formData.get('account_holder') || '';
@@ -85,8 +85,10 @@ exports.handler = async (event) => {
       });
     }
 
-    // Create page
-    const handle = `ms-${minishop_name.toLowerCase().trim().replace(/\s+/g, '-')}`;
+    // Create page with handle format: ms-[store-name]-ms
+    const handleBase = minishop_name.toLowerCase().trim().replace(/\s+/g, '-');
+    const handle = `ms-${handleBase}-ms`;
+
     await shopifyPost('pages.json', {
       page: {
         title: minishop_name,
